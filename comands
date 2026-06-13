@@ -1,0 +1,38 @@
+// fetch dependencies
+ go mod tidy  
+
+//Start server
+ go run ./cmd/server   
+
+ curl -s localhost:8080/otp/verify \
+ -H "Content-Type: application/json" \
+ -d '{"uid":42}'
+
+ curl -s localhost:8080/wallet/credit \
+ -H "Content-Type: application/json" \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE0MjY2MzUsInVpZCI6NDJ9.oeA4Nf8_qaCQmszNfy2koGMeVArc_9PMxHKIiuTHUXE" \
+ -d '{"amount":500,"constraintId":"win:1:42"}'
+
+ curl -s localhost:8080/wallet/debit \
+ -H "Content-Type: application/json" \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE0MjY2MzUsInVpZCI6NDJ9.oeA4Nf8_qaCQmszNfy2koGMeVArc_9PMxHKIiuTHUXE" \
+ -d '{"amount":250,"constraintId":"reg:1:42"}'
+
+curl -s localhost:8080/wallet/revert \
+ -H "Content-Type: application/json" \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE0MjY2MzUsInVpZCI6NDJ9.oeA4Nf8_qaCQmszNfy2koGMeVArc_9PMxHKIiuTHUXE" \
+ -d '{"originalTid":27, "constraintId":"reg:2:42", "IgnoreIfReverted":true}'
+
+// Query wallets
+docker-compose exec postgres psql -U app -d minif2p -c 'SELECT * FROM wallets;'
+
+docker-compose exec postgres psql -U app -d minif2p \
+ -c "UPDATE wallets SET unlock_coins=100 , cashback_coins=100, added_coins=100, actual_coins=100 WHERE uid=42;"
+
+
+// Query passbook
+ docker-compose exec postgres psql -U app -d minif2p \
+  -c "SELECT tid, uid, constraint_id, type, amount, revert_tid FROM passbook ORDER BY tid;"
+
+
+ 

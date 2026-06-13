@@ -5,6 +5,7 @@ import (
 	"Go-project/internal/platform/config"
 	"Go-project/internal/platform/db"
 	"Go-project/internal/platform/redisx"
+	"Go-project/internal/wallet"
 	"context"
 	"log/slog"
 	"net/http"
@@ -25,14 +26,25 @@ func main() {
 
 	cfg := config.Load()
 
+	if err := db.RunMigrations(cfg.DatabaseURL); err != nil {
+		log.Error("migrations failed", "err", err.Error())
+		os.Exit(1)
+	}
+
 	// build Dependencies  (this is DI container).
 	pool := db.MustConnect(ctx, cfg.DatabaseURL)
 	rdb := redisx.MustConnect(ctx, cfg.RedisAddr)
 	log.Info("connected to Postgres and redis")
 
-	// Routes
 	r := chi.NewRouter()
+
+	// User API Routes
 	gateway.Routes(r, []byte(cfg.JWTSecret))
+
+	// Wallet Routes
+	w := wallet.New(pool)
+	wallet.Routes(r, w, []byte(cfg.JWTSecret))
+
 	// liveness: "is the process alive?" — never touches dependencies.
 	r.Get("/healthz", func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusOK)

@@ -5,6 +5,7 @@ import (
 	"Go-project/internal/platform/config"
 	"Go-project/internal/platform/db"
 	"Go-project/internal/platform/redisx"
+	"Go-project/internal/tournament"
 	"Go-project/internal/wallet"
 	"context"
 	"log/slog"
@@ -19,6 +20,7 @@ import (
 
 func main() {
 	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(log)
 
 	// 1) ctx that cancels when SIGINT/SIGTERM arrives — the shutdown trigger.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -44,6 +46,10 @@ func main() {
 	// Wallet Routes
 	w := wallet.New(pool)
 	wallet.Routes(r, w, []byte(cfg.JWTSecret))
+
+	// tournament Routes
+	tscv := tournament.NEW(pool, w)
+	tournament.Routes(r, tscv, []byte(cfg.JWTSecret))
 
 	// liveness: "is the process alive?" — never touches dependencies.
 	r.Get("/healthz", func(w http.ResponseWriter, req *http.Request) {

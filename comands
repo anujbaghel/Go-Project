@@ -8,20 +8,32 @@
  -H "Content-Type: application/json" \
  -d '{"uid":42}'
 
+ curl -s localhost:8080/wallet/balance \
+ -H "Content-Type: application/json" \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE2MDczMzYsInVpZCI6NDJ9.hATQCg-GPv7-KhqsZ_OEsBNZkI3DSNheyVBCsyFE2fI"
+
  curl -s localhost:8080/wallet/credit \
  -H "Content-Type: application/json" \
- -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE0MjY2MzUsInVpZCI6NDJ9.oeA4Nf8_qaCQmszNfy2koGMeVArc_9PMxHKIiuTHUXE" \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE2MDczMzYsInVpZCI6NDJ9.hATQCg-GPv7-KhqsZ_OEsBNZkI3DSNheyVBCsyFE2fI" \
  -d '{"amount":500,"constraintId":"win:1:42"}'
 
  curl -s localhost:8080/wallet/debit \
  -H "Content-Type: application/json" \
- -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE0MjY2MzUsInVpZCI6NDJ9.oeA4Nf8_qaCQmszNfy2koGMeVArc_9PMxHKIiuTHUXE" \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE2MDczMzYsInVpZCI6NDJ9.hATQCg-GPv7-KhqsZ_OEsBNZkI3DSNheyVBCsyFE2fI" \
  -d '{"amount":250,"constraintId":"reg:1:42"}'
 
 curl -s localhost:8080/wallet/revert \
  -H "Content-Type: application/json" \
- -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE0MjY2MzUsInVpZCI6NDJ9.oeA4Nf8_qaCQmszNfy2koGMeVArc_9PMxHKIiuTHUXE" \
- -d '{"originalTid":27, "constraintId":"reg:2:42", "IgnoreIfReverted":true}'
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE2MDczMzYsInVpZCI6NDJ9.hATQCg-GPv7-KhqsZ_OEsBNZkI3DSNheyVBCsyFE2fI" \
+ -d '{"originalTid":27, "constraintId":"rev:1:42", "IgnoreIfReverted":true}'
+
+ // Tournaments
+ curl -s localhost:8080/tournaments -d '{"name":"Ludo Mega","entryFee":200,"instantMinScore":150}'
+
+// Registeration
+ curl -s localhost:8080/tournaments/1/register \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE2MDczMzYsInVpZCI6NDJ9.hATQCg-GPv7-KhqsZ_OEsBNZkI3DSNheyVBCsyFE2fI"
+
 
 // Query wallets
 docker-compose exec postgres psql -U app -d minif2p -c 'SELECT * FROM wallets;'
@@ -33,6 +45,3 @@ docker-compose exec postgres psql -U app -d minif2p \
 // Query passbook
  docker-compose exec postgres psql -U app -d minif2p \
   -c "SELECT tid, uid, constraint_id, type, amount, revert_tid FROM passbook ORDER BY tid;"
-
-
- 

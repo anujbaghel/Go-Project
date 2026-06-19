@@ -2,7 +2,7 @@ package tournament
 
 import (
 	"Go-project/internal/gateway"
-	"Go-project/internal/wallet"
+	"Go-project/internal/walletcontract"
 	"context"
 	"encoding/json"
 	"errors"
@@ -54,10 +54,15 @@ func Routes(r chi.Router, svc *Service, secret []byte) {
 					slog.Error("register failed Registeration Closed", "ltid", ltid, "uid", uid, "err", err)
 					http.Error(w, err.Error(), http.StatusConflict)
 				}
-			case errors.Is(err, wallet.ErrInsufficientFunds):
+			case errors.Is(err, walletcontract.ErrInsufficientFunds):
 				{
 					slog.Error("register failed Insufficient Funds", "ltid", ltid, "uid", uid, "err", err)
 					http.Error(w, err.Error(), http.StatusPaymentRequired)
+				}
+			case errors.Is(err, walletcontract.ErrWalletUnavailable):
+				{
+					slog.Error("register failed wallet unavailable", "ltid", ltid, "uid", uid, "err", err)
+					http.Error(w, err.Error(), http.StatusServiceUnavailable)
 				}
 			case err != nil:
 				{

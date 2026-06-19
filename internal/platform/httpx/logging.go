@@ -10,20 +10,24 @@ import (
 
 type ctxKey string
 
-const loggerKey ctxKey = "logger"
+const (
+	loggerKey    ctxKey = "logger"
+	requestIDKey ctxKey = "requestId"
+)
 
 func RequestId(base *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			id := r.Header.Get("X-Request-Id")
 			if id == "" {
-				// id = newId()
+				id = newId() // first hop mints the id; downstream services inherit it
 			}
 			l := base.With("requestId", id) // a logger that stamps every line with this id
 			w.Header().Set("X-Request-Id", id)
 			l.Info("request", "method", r.Method, "path", r.URL.Path)
 
 			ctx := context.WithValue(r.Context(), loggerKey, l)
+			ctx = context.WithValue(ctx, requestIDKey, id)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -35,6 +39,15 @@ func Logger(ctx context.Context) *slog.Logger {
 		return l
 	}
 	return slog.Default()
+}
+
+// RequestID returns the request id stamped by the RequestId middleware, or "" if
+// the context did not pass through it. Used to propagate the id to downstream services.
+func RequestID(ctx context.Context) string {
+	if id, ok := ctx.Value(requestIDKey).(string); ok {
+		return id
+	}
+	return ""
 }
 
 func newId() string {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"Go-project/internal/walletcontract"
+
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -16,7 +18,10 @@ type Wallet struct {
 	pool *pgxpool.Pool // pointer - all callers share one wallet service
 }
 
-var ErrInsufficientFunds = errors.New("Insufficient coins")
+// ErrInsufficientFunds is the canonical sentinel defined in walletcontract; aliased
+// here so existing wallet-package references keep working and compare equal across
+// the boundary (errors.Is).
+var ErrInsufficientFunds = walletcontract.ErrInsufficientFunds
 
 func New(pool *pgxpool.Pool) *Wallet { return &Wallet{pool: pool} }
 

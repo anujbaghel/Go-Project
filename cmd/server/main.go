@@ -61,11 +61,17 @@ func main() {
 
 	// Wallet Routes
 	if cfg.WalletBaseURL != "" {
-		wc = walletclient.New(cfg.WalletBaseURL + cfg.WALLET_HTTP_ADDR) // microservice : call wallet over
-		log.Info("wallet: remote", "url", cfg.WalletBaseURL)
+		wc = walletclient.New(cfg.WalletBaseURL+cfg.WALLET_HTTP_ADDR, cfg.WalletInternalSecret) // microservice : call wallet over HTTP
+		log.Info("wallet: remote", "url", cfg.WalletBaseURL+cfg.WALLET_HTTP_ADDR)
 	} else {
 		// wc = wallet.New(pool)
 		log.Info("wallet: in-process")
+	}
+	// Fail fast on boot: a money service silently wired to a nil backend would
+	// otherwise nil-panic on the first user request.
+	if wc == nil {
+		log.Error("no wallet backend configured: set WALLET_BASE_URL or enable the in-process backend")
+		os.Exit(1)
 	}
 	// wallet.Routes(r, wc, []byte(cfg.JWTSecret))
 

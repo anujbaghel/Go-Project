@@ -90,6 +90,15 @@ func Routes(router chi.Router, w *Wallet, secret []byte) {
 			writeJSON(rw, map[string]int64{"balance": bal})
 		})
 	})
+
+	router.Group(func(pr chi.Router) {
+		pr.Use(gateway.Auth(secret))
+		pr.Post("/wallet/balance", func(rw http.ResponseWriter, req *http.Request) {
+			uid, _ := gateway.UserID(req.Context())
+			bal, _ := w.Balance(req.Context(), uid)
+			writeJSON(rw, map[string]int64{"balance": bal})
+		})
+	})
 }
 
 func writeJSON(w http.ResponseWriter, v any) {

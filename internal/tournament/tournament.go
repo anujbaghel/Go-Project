@@ -1,7 +1,6 @@
 package tournament
 
 import (
-	"Go-project/internal/wallet"
 	"context"
 	"errors"
 	"fmt"
@@ -29,12 +28,17 @@ type Tournament struct {
 	Status   string
 }
 
-type Service struct {
-	pool   *pgxpool.Pool
-	wallet *wallet.Wallet
+type WalletClient interface {
+	EnsureWallet(ctx context.Context, uid int64) error
+	DEBIT(ctx context.Context, uid, amount int64, constraintId string) error
 }
 
-func NEW(p *pgxpool.Pool, w *wallet.Wallet) *Service {
+type Service struct {
+	pool   *pgxpool.Pool
+	wallet WalletClient
+}
+
+func NEW(p *pgxpool.Pool, w WalletClient) *Service {
 	return &Service{pool: p, wallet: w}
 }
 

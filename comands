@@ -1,3 +1,6 @@
+token: 43 = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3ODYzMDUsInVpZCI6NDN9.Hzz65cn6WABKAUUsB3qZ0mfsHALfvEbFZPVjOjazRhw
+token: 42 = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3NjgxMTYsInVpZCI6NDJ9.Yg4AhniVIj6f0F_iBbe3e51HjHpnPsW4CEGgGgR55UU
+
 // fetch dependencies
  go mod tidy  
 
@@ -7,15 +10,19 @@
  curl -s localhost:8080/otp/verify \
  -H "Content-Type: application/json" \
  -d '{"uid":42}'
+ 
 
- curl -s localhost:8080/wallet/balance \
- -H "Content-Type: application/json" \
- -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE2MDczMzYsInVpZCI6NDJ9.hATQCg-GPv7-KhqsZ_OEsBNZkI3DSNheyVBCsyFE2fI"
+ curl -s -X POST localhost:8080/wallet/balance \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3NjgxMTYsInVpZCI6NDJ9.Yg4AhniVIj6f0F_iBbe3e51HjHpnPsW4CEGgGgR55UU"
+
+ curl -s -X POST localhost:8080/wallet/balance \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3ODYzMDUsInVpZCI6NDN9.Hzz65cn6WABKAUUsB3qZ0mfsHALfvEbFZPVjOjazRhw"
+
 
  curl -s localhost:8080/wallet/credit \
  -H "Content-Type: application/json" \
- -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE2MDczMzYsInVpZCI6NDJ9.hATQCg-GPv7-KhqsZ_OEsBNZkI3DSNheyVBCsyFE2fI" \
- -d '{"amount":500,"constraintId":"win:1:42"}'
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3ODYzMDUsInVpZCI6NDN9.Hzz65cn6WABKAUUsB3qZ0mfsHALfvEbFZPVjOjazRhw" \
+ -d '{"amount":1000,"constraintId":"dummy:1:43"}'
 
  curl -s localhost:8080/wallet/debit \
  -H "Content-Type: application/json" \
@@ -30,10 +37,28 @@ curl -s localhost:8080/wallet/revert \
  // Tournaments
  curl -s localhost:8080/tournaments -d '{"name":"Ludo Mega","entryFee":200,"instantMinScore":150}'
 
-// Registeration
- curl -s localhost:8080/tournaments/1/register \
- -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE2MDczMzYsInVpZCI6NDJ9.hATQCg-GPv7-KhqsZ_OEsBNZkI3DSNheyVBCsyFE2fI"
+ curl -s -X POST localhost:8080/tournaments/3/start
+ curl -s -X POST localhost:8080/tournaments/3/result
+ curl -s -X POST localhost:8080/tournaments/3/cancel
+ curl -s -X POST localhost:8080/tournaments/3/payout
 
+// Registeration
+ curl -s -X POST localhost:8080/tournaments/3/register \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3NjgxMTYsInVpZCI6NDJ9.Yg4AhniVIj6f0F_iBbe3e51HjHpnPsW4CEGgGgR55UU"
+
+ curl -s -X POST localhost:8080/tournaments/3/register \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3ODYzMDUsInVpZCI6NDN9.Hzz65cn6WABKAUUsB3qZ0mfsHALfvEbFZPVjOjazRhw"
+
+
+// Publish Job
+curl -s localhost:8080/jobs/credit -d '{"uid":42,"amount":500,"constraintId":"job:win:1:42"}'
+
+
+// WEBSOCKET -----------------------------------------------------------------------------------------
+websocat -vv -E --ping-interval 5 "ws://localhost:8080/play?ltid=2&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3NjgxMTYsInVpZCI6NDJ9.Yg4AhniVIj6f0F_iBbe3e51HjHpnPsW4CEGgGgR55UU"
+
+// DIRECT SQL COMMANDS ON POSTGRES
+------------------------------------------------------------------------------------------------------
 
 // Query wallets
 docker-compose exec postgres psql -U app -d minif2p -c 'SELECT * FROM wallets;'
@@ -45,3 +70,12 @@ docker-compose exec postgres psql -U app -d minif2p \
 // Query passbook
  docker-compose exec postgres psql -U app -d minif2p \
   -c "SELECT tid, uid, constraint_id, type, amount, revert_tid FROM passbook ORDER BY tid;"
+
+docker-compose exec postgres psql -U app -d minif2p \
+ -c "SELECT * FROM tournaments ORDER BY ltid LIMIT 5;"
+
+ docker-compose exec postgres psql -U app -d minif2p \
+ -c "SELECT * FROM registrations ORDER BY id LIMIT 5;"
+
+ docker-compose exec postgres psql -U app -d minif2p -c \
+"UPDATE registrations SET score=200 WHERE ltid=3 AND uid=42; UPDATE registrations SET score=50 WHERE ltid=3 AND uid=43;"

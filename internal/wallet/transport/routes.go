@@ -1,7 +1,9 @@
-package wallet
+package transport
 
 import (
-	"Go-project/internal/gateway"
+	"Go-project/internal/core/gateway"
+	walletcontract "Go-project/internal/wallet/contract"
+	walletservice "Go-project/internal/wallet/service"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -9,7 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func Routes(router chi.Router, w *Wallet, secret []byte) {
+func Routes(router chi.Router, w *walletservice.Wallet, secret []byte) {
 	router.Group(func(pr chi.Router) {
 		pr.Use(gateway.Auth(secret))
 		pr.Post("/wallet/credit", func(rw http.ResponseWriter, req *http.Request) {
@@ -52,7 +54,7 @@ func Routes(router chi.Router, w *Wallet, secret []byte) {
 			}
 
 			if err := w.DEBIT(req.Context(), uid, body.Amount, body.ConstraintId); err != nil {
-				if errors.Is(err, ErrInsufficientFunds) {
+				if errors.Is(err, walletcontract.ErrInsufficientFunds) {
 					http.Error(rw, err.Error(), http.StatusPaymentRequired)
 					return
 				}

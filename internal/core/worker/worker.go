@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"Go-project/internal/jobs"
+	"Go-project/internal/core/jobs"
 	"Go-project/internal/platform/dynconfig"
 	"context"
 	"errors"

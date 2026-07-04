@@ -1,8 +1,8 @@
 package tournament
 
 import (
-	"Go-project/internal/gateway"
-	"Go-project/internal/walletcontract"
+	"Go-project/internal/core/gateway"
+	walletcontract "Go-project/internal/wallet/contract"
 	"context"
 	"encoding/json"
 	"errors"

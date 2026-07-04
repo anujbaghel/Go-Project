@@ -4,7 +4,9 @@ import (
 	"Go-project/internal/platform/config"
 	"Go-project/internal/platform/db"
 	"Go-project/internal/platform/httpx"
-	"Go-project/internal/wallet"
+	walletservice "Go-project/internal/wallet/service"
+	"Go-project/internal/wallet/transport"
+	"Go-project/migrations/wallet"
 	"context"
 	"log/slog"
 	"net/http"
@@ -24,8 +26,14 @@ func main() {
 	defer stop()
 
 	cfg := config.Load()
+
+	if err := db.RunMigrations(cfg.DatabaseURL, wallet.FS, "wallet_versions"); err != nil {
+		log.Error("migrations failed for wallet", "err", err.Error())
+		os.Exit(1)
+	}
+
 	pool := db.MustConnect(ctx, cfg.DatabaseURL)
-	w := wallet.New(pool)
+	w := walletservice.New(pool)
 
 	r := chi.NewRouter()
 	r.Use(httpx.RequestId(log))
@@ -44,7 +52,7 @@ func main() {
 		rw.WriteHeader(http.StatusOK)
 	})
 
-	wallet.InternalRoutes(r, w, []byte(cfg.WalletInternalSecret))
+	transport.InternalRoutes(r, w, []byte(cfg.WalletInternalSecret))
 
 	srv := &http.Server{Addr: cfg.WALLET_HTTP_ADDR, Handler: r}
 	go func() {

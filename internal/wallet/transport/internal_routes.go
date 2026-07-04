@@ -1,4 +1,4 @@
-package wallet
+package transport
 
 import (
 	"crypto/subtle"
@@ -8,7 +8,8 @@ import (
 	"strings"
 
 	"Go-project/internal/platform/httpx"
-	"Go-project/internal/walletcontract"
+	walletcontract "Go-project/internal/wallet/contract"
+	walletservice "Go-project/internal/wallet/service"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -16,7 +17,7 @@ import (
 // InternalRoutes mounts the service-to-service wallet API. These endpoints move
 // money by uid with no end-user JWT, so they are gated by a shared secret
 // (internalAuth) — only the platform's own services know it.
-func InternalRoutes(r chi.Router, w *Wallet, secret []byte) {
+func InternalRoutes(r chi.Router, w *walletservice.Wallet, secret []byte) {
 	r.Group(func(ir chi.Router) {
 		ir.Use(internalAuth(secret))
 
@@ -34,7 +35,7 @@ func InternalRoutes(r chi.Router, w *Wallet, secret []byte) {
 			}
 			err := w.DEBIT(req.Context(), b.UID, b.Amount, b.ConstraintID)
 			switch {
-			case errors.Is(err, ErrInsufficientFunds):
+			case errors.Is(err, walletcontract.ErrInsufficientFunds):
 				log.Warn("debit: insufficient funds", "uid", b.UID, "amount", b.Amount, "constraintId", b.ConstraintID)
 				http.Error(rw, "Insufficient Funds: "+err.Error(), http.StatusPaymentRequired)
 			case err != nil:

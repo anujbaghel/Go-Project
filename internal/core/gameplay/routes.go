@@ -1,7 +1,7 @@
 package gameplay
 
 import (
-	"Go-project/internal/gateway"
+	"Go-project/internal/core/gateway"
 	"encoding/json"
 	"log/slog"
 	"net/http"

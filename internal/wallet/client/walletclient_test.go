@@ -1,13 +1,12 @@
-package walletclient
+package client
 
 import (
+	walletcontract "Go-project/internal/wallet/contract"
 	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"Go-project/internal/walletcontract"
 )
 
 const testSecret = "test-secret"

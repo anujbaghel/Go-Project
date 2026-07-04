@@ -1,10 +1,10 @@
-package wallet
+package walletservice
 
 import (
 	"context"
 	"errors"
 
-	"Go-project/internal/walletcontract"
+	walletcontract "Go-project/internal/wallet/contract"
 
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"

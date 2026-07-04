@@ -1,18 +1,19 @@
 package main
 
 import (
-	"Go-project/internal/gameplay"
-	"Go-project/internal/gateway"
-	"Go-project/internal/interfaces/wallet"
-	"Go-project/internal/jobs"
+	"Go-project/internal/core/gameplay"
+	"Go-project/internal/core/gateway"
+	"Go-project/internal/core/jobs"
+	"Go-project/internal/core/tournament"
+	"Go-project/internal/core/worker"
 	"Go-project/internal/platform/config"
 	"Go-project/internal/platform/db"
 	"Go-project/internal/platform/dynconfig"
 	"Go-project/internal/platform/httpx"
 	"Go-project/internal/platform/redisx"
-	"Go-project/internal/tournament"
-	"Go-project/internal/walletclient"
-	"Go-project/internal/worker"
+	"Go-project/internal/wallet/backend"
+	"Go-project/internal/wallet/client"
+	"Go-project/migrations/core"
 	"context"
 	"log/slog"
 	"net/http"
@@ -25,7 +26,7 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-var wc wallet.WalletBackend
+var wc backend.WalletBackend
 
 func main() {
 	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -42,7 +43,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := db.RunMigrations(cfg.DatabaseURL); err != nil {
+	if err := db.RunMigrations(cfg.DatabaseURL, core.FS, "core_versions"); err != nil {
 		log.Error("migrations failed", "err", err.Error())
 		os.Exit(1)
 	}
@@ -61,7 +62,7 @@ func main() {
 
 	// Wallet Routes
 	if cfg.WalletBaseURL != "" {
-		wc = walletclient.New(cfg.WalletBaseURL+cfg.WALLET_HTTP_ADDR, cfg.WalletInternalSecret) // microservice : call wallet over HTTP
+		wc = client.New(cfg.WalletBaseURL+cfg.WALLET_HTTP_ADDR, cfg.WalletInternalSecret) // microservice : call wallet over HTTP
 		log.Info("wallet: remote", "url", cfg.WalletBaseURL+cfg.WALLET_HTTP_ADDR)
 	} else {
 		// wc = wallet.New(pool)

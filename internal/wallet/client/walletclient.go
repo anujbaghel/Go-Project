@@ -1,4 +1,4 @@
-package walletclient
+package client
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"Go-project/internal/platform/httpx"
-	"Go-project/internal/walletcontract"
+	walletcontract "Go-project/internal/wallet/contract"
 
 	"github.com/sony/gobreaker"
 )

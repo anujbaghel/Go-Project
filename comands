@@ -1,5 +1,5 @@
 token: 43 = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3ODYzMDUsInVpZCI6NDN9.Hzz65cn6WABKAUUsB3qZ0mfsHALfvEbFZPVjOjazRhw
-token: 42 = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3NjgxMTYsInVpZCI6NDJ9.Yg4AhniVIj6f0F_iBbe3e51HjHpnPsW4CEGgGgR55UU
+token: 42 = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE5NTk4OTUsInVpZCI6NDJ9.E9JLz0zdNkvfj3hhX2Kd4VoItXk7XdRsSsISph0II5Y
 
 // fetch dependencies
  go mod tidy  
@@ -21,7 +21,7 @@ token: 42 = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3NjgxMTYsInVpZCI
 
  curl -s localhost:8080/wallet/credit \
  -H "Content-Type: application/json" \
- -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3ODYzMDUsInVpZCI6NDN9.Hzz65cn6WABKAUUsB3qZ0mfsHALfvEbFZPVjOjazRhw" \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMxNTk3NTksInVpZCI6MX0.4ueKcaZex97b3z7mwFOVwg-h2NKkYllnxkqKFZaj3Gs" \
  -d '{"amount":1000,"constraintId":"dummy:1:43"}'
 
  curl -s localhost:8080/wallet/debit \
@@ -35,7 +35,7 @@ curl -s localhost:8080/wallet/revert \
  -d '{"originalTid":27, "constraintId":"rev:1:42", "IgnoreIfReverted":true}'
 
  // Tournaments
- curl -s localhost:8080/tournaments -d '{"name":"Ludo Mega","entryFee":200,"instantMinScore":150}'
+ curl -s -X POST localhost:8080/tournaments -d '{"name":"Ludo Mega Test","entryFee":150,"instantMinScore":100}'
 
  curl -s -X POST localhost:8080/tournaments/3/start
  curl -s -X POST localhost:8080/tournaments/3/result
@@ -43,8 +43,8 @@ curl -s localhost:8080/wallet/revert \
  curl -s -X POST localhost:8080/tournaments/3/payout
 
 // Registeration
- curl -s -X POST localhost:8080/tournaments/3/register \
- -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3NjgxMTYsInVpZCI6NDJ9.Yg4AhniVIj6f0F_iBbe3e51HjHpnPsW4CEGgGgR55UU"
+ curl -s -X POST localhost:8080/tournaments/4/register \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMxNjMzMzIsInVpZCI6MX0.gNrdhNXjDLnphWTv04hpsVgtw8fUxtj1OdnTBOWZamM"
 
  curl -s -X POST localhost:8080/tournaments/3/register \
  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3ODYzMDUsInVpZCI6NDN9.Hzz65cn6WABKAUUsB3qZ0mfsHALfvEbFZPVjOjazRhw"
@@ -55,8 +55,8 @@ curl -s localhost:8080/jobs/credit -d '{"uid":42,"amount":500,"constraintId":"jo
 
 
 // WEBSOCKET -----------------------------------------------------------------------------------------
-websocat -vv -E --ping-interval 5 "ws://localhost:8080/play?ltid=2&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3NjgxMTYsInVpZCI6NDJ9.Yg4AhniVIj6f0F_iBbe3e51HjHpnPsW4CEGgGgR55UU"
-
+websocat -vv -E --ping-interval 5 "ws://localhost:8080/play?ltid=4&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE5NTk4OTUsInVpZCI6NDJ9.E9JLz0zdNkvfj3hhX2Kd4VoItXk7XdRsSsISph0II5Y"
+{"score":200}
 // DIRECT SQL COMMANDS ON POSTGRES
 ------------------------------------------------------------------------------------------------------
 
@@ -79,3 +79,9 @@ docker-compose exec postgres psql -U app -d minif2p \
 
  docker-compose exec postgres psql -U app -d minif2p -c \
 "UPDATE registrations SET score=200 WHERE ltid=3 AND uid=42; UPDATE registrations SET score=50 WHERE ltid=3 AND uid=43;"
+
+
+curl -i -X POST localhost:8090/internal/wallet/credit \
+    -H 'Authorization: Bearer abc123123' \
+    -H 'Content-Type: application/json' \
+    -d '{"uid":1,"amount":50,"constraintId":"initialCredit:1:1"}' 

@@ -61,7 +61,13 @@ func main() {
 	gateway.Routes(r, []byte(cfg.JWTSecret))
 
 	// Wallet Routes
-	if cfg.WalletBaseURL != "" {
+	if cfg.WALLET_GRPC_ADDR != "" {
+		wc, err = client.NewGrpcClient(cfg.WALLET_GRPC_ADDR)
+		if err != nil {
+			log.Error("failed to create gRPC client", "err", err)
+			os.Exit(1)
+		}
+	} else if cfg.WalletBaseURL != "" {
 		wc = client.New(cfg.WalletBaseURL+cfg.WALLET_HTTP_ADDR, cfg.WalletInternalSecret) // microservice : call wallet over HTTP
 		log.Info("wallet: remote", "url", cfg.WalletBaseURL+cfg.WALLET_HTTP_ADDR)
 	} else {

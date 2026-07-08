@@ -6,9 +6,11 @@ import (
 	"Go-project/internal/platform/httpx"
 	walletservice "Go-project/internal/wallet/service"
 	"Go-project/internal/wallet/transport"
+	"Go-project/internal/wallet/walletpb"
 	"Go-project/migrations/wallet"
 	"context"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,6 +18,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -62,11 +65,21 @@ func main() {
 	}()
 	log.Info("wallet service listening", "addr", cfg.WALLET_HTTP_ADDR)
 
+	lis, err := net.Listen("tcp", ":9090")
+	if err != nil {
+		log.Error("grpc failed to listen", "err", err)
+		os.Exit(1)
+	}
+	grpcServer := grpc.NewServer()
+	walletpb.RegisterWalletServiceServer(grpcServer, transport.NewWalletGRPCServer(w))
+	go grpcServer.Serve(lis)
+
 	<-ctx.Done()
 	// Graceful shutdown
 	shCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	_ = srv.Shutdown(shCtx)
+	grpcServer.GracefulStop()
 	pool.Close()
 	log.Info("wallet service stopped")
 }

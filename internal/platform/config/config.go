@@ -11,6 +11,7 @@ type Config struct {
 	WALLET_HTTP_ADDR     string
 	WalletInternalSecret string
 	WALLET_GRPC_ADDR     string
+	KAFKA_BROKERS        string
 }
 
 func Load() Config {
@@ -23,6 +24,7 @@ func Load() Config {
 		WALLET_HTTP_ADDR:     env("WALLET_HTTP_ADDR", ":8090"),
 		WalletInternalSecret: env("WALLET_INTERNAL_SECRET", "dev-internal-secret-change-me"),
 		WALLET_GRPC_ADDR:     env("WALLET_GRPC_ADDR", ":9090"),
+		KAFKA_BROKERS:        env("KAFKA_BROKERS", "localhost:9092"),
 	}
 }
 

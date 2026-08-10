@@ -2,8 +2,12 @@ package walletservice
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"log/slog"
+	"strconv"
 
+	"Go-project/internal/platform/kafkax"
 	walletcontract "Go-project/internal/wallet/contract"
 
 	"github.com/jackc/pgx/v5/pgconn"
@@ -15,7 +19,8 @@ const NumVirtualShards = 1024
 func ShardID(uid int64) int { return int(uid%NumVirtualShards) / 256 }
 
 type Wallet struct {
-	pool *pgxpool.Pool // pointer - all callers share one wallet service
+	pool     *pgxpool.Pool    // pointer - all callers share one wallet service
+	producer *kafkax.Producer // pointer - all callers share one producer
 }
 
 // ErrInsufficientFunds is the canonical sentinel defined in walletcontract; aliased
@@ -23,7 +28,9 @@ type Wallet struct {
 // the boundary (errors.Is).
 var ErrInsufficientFunds = walletcontract.ErrInsufficientFunds
 
-func New(pool *pgxpool.Pool) *Wallet { return &Wallet{pool: pool} }
+func New(pool *pgxpool.Pool, producer *kafkax.Producer) *Wallet {
+	return &Wallet{pool: pool, producer: producer}
+}
 
 // Ensure Wallet inserts a zero-balance wallet row if the user has none
 func (s *Wallet) EnsureWallet(ctx context.Context, uid int64) error {
@@ -58,7 +65,7 @@ func (s *Wallet) CREDIT(ctx context.Context, uid int64, amnt int64, constraintID
 	 VALUES ($1, $2, $3, $4)`,
 		uid,
 		constraintID,
-		"WINNING_CREDT",
+		"WINNING_CREDIT",
 		amnt)
 
 	if err != nil {
@@ -74,7 +81,25 @@ func (s *Wallet) CREDIT(ctx context.Context, uid int64, amnt int64, constraintID
 	if err != nil {
 		return err
 	}
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+
+	// Publish to Kafka
+	if s.producer != nil {
+		event := walletcontract.WalletTransactionEvent{
+			UID:          uid,
+			Type:         "CREDIT",
+			Amount:       amnt,
+			ConstraintID: constraintID,
+		}
+		evt, _ := json.Marshal(event)
+		if err := s.producer.Publish(ctx, strconv.FormatInt(uid, 10), evt); err != nil {
+			slog.Error("wallet event publish failed", "uid", uid, "err", err)
+		}
+		slog.Info("wallet event published for credit", "uid", uid, "amount", amnt, "constraintId", constraintID)
+	}
+	return nil
 }
 
 func (s *Wallet) DEBIT(ctx context.Context, uid int64, debitAmnt int64, constraintId string) error {
@@ -144,7 +169,25 @@ func (s *Wallet) DEBIT(ctx context.Context, uid int64, debitAmnt int64, constrai
 	}
 
 	// Debit Successfull
-	return tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+
+	// Publish to Kafka
+	if s.producer != nil {
+		event := walletcontract.WalletTransactionEvent{
+			UID:          uid,
+			Type:         "DEBIT",
+			Amount:       debitAmnt,
+			ConstraintID: constraintId,
+		}
+		evt, _ := json.Marshal(event)
+		if err := s.producer.Publish(ctx, strconv.FormatInt(uid, 10), evt); err != nil {
+			slog.Error("wallet event publish failed for debit", "uid", uid, "err", err)
+		}
+		slog.Info("wallet event published for debit", "uid", uid, "amount", debitAmnt, "constraintId", constraintId)
+	}
+	return nil
 }
 
 func (s *Wallet) REVERT(ctx context.Context, originalTid int64, constraintId string, ignoreIfReverted bool) error {

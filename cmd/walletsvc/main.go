@@ -4,6 +4,7 @@ import (
 	"Go-project/internal/platform/config"
 	"Go-project/internal/platform/db"
 	"Go-project/internal/platform/httpx"
+	"Go-project/internal/platform/kafkax"
 	walletservice "Go-project/internal/wallet/service"
 	"Go-project/internal/wallet/transport"
 	"Go-project/internal/wallet/walletpb"
@@ -14,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -36,7 +38,13 @@ func main() {
 	}
 
 	pool := db.MustConnect(ctx, cfg.DatabaseURL)
-	w := walletservice.New(pool)
+
+	//Kafka
+	topic := "wallet-transactions"
+	producer := kafkax.NewProducer(strings.Split(cfg.KAFKA_BROKERS, ","), topic)
+	defer producer.Close()
+
+	w := walletservice.New(pool, producer)
 
 	r := chi.NewRouter()
 	r.Use(httpx.RequestId(log))

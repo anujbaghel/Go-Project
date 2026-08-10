@@ -34,3 +34,10 @@ type MoveRequest struct {
 type StatusResponse struct {
 	Status string `json:"status"`
 }
+
+type WalletTransactionEvent struct {
+	UID          int64  `json:"uid"`
+	Type         string `json:"type"`
+	Amount       int64  `json:"amount"`
+	ConstraintID string `json:"constraintId"`
+}

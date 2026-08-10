@@ -1,0 +1,22 @@
+FROM golang:1.26.4 AS builder
+
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 go build -o /out/notifier ./cmd/notifier
+
+# ---- STAGE 2: runtime ----
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY --from=builder /out/notifier /app/notifier
+
+COPY /config/ /app/config
+EXPOSE 8085
+
+ENTRYPOINT [ "/app/notifier" ]

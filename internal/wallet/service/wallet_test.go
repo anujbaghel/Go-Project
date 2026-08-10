@@ -17,7 +17,7 @@ func TestConcurrentDebit(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer pool.Close()
-	w := New(pool)
+	w := New(pool, nil)
 
 	const uid = 99999
 	// fresh start: wipe this test user, give them exactly 1000 coins

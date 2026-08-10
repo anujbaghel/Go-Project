@@ -7,9 +7,9 @@ token: 42 = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE5NTk4OTUsInVpZCI
 //Start server
  go run ./cmd/server   
 
- curl -s localhost:8080/otp/verify \
+ curl -s localhost/otp/verify \
  -H "Content-Type: application/json" \
- -d '{"uid":42}'
+ -d '{"uid":1}'
  
 
  curl -s -X POST localhost:8080/wallet/balance \
@@ -35,7 +35,7 @@ curl -s localhost:8080/wallet/revert \
  -d '{"originalTid":27, "constraintId":"rev:1:42", "IgnoreIfReverted":true}'
 
  // Tournaments
- curl -s -X POST localhost:8080/tournaments -d '{"name":"Ludo Mega Test","entryFee":150,"instantMinScore":100}'
+ curl -s -X POST localhost:8080/tournaments -d '{"name":"Ludo Maha Mega Test","entryFee":15,"instantMinScore":100}'
 
  curl -s -X POST localhost:8080/tournaments/3/start
  curl -s -X POST localhost:8080/tournaments/3/result
@@ -43,8 +43,8 @@ curl -s localhost:8080/wallet/revert \
  curl -s -X POST localhost:8080/tournaments/3/payout
 
 // Registeration
- curl -s -X POST localhost:8080/tournaments/4/register \
- -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODMxNjMzMzIsInVpZCI6MX0.gNrdhNXjDLnphWTv04hpsVgtw8fUxtj1OdnTBOWZamM"
+ curl -s -X POST localhost/tournaments/3/register \
+ -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODM2OTMyNDcsInVpZCI6MX0.kTzlp1buvQZUS6FTgE1L9ya17n74MmHJZvPL_nKcmnI"
 
  curl -s -X POST localhost:8080/tournaments/3/register \
  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODE3ODYzMDUsInVpZCI6NDN9.Hzz65cn6WABKAUUsB3qZ0mfsHALfvEbFZPVjOjazRhw"
